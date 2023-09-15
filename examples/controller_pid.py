@@ -7,11 +7,13 @@ import numpy as np
 import ftc
 from ftc.models.multicopter import Multicopter
 from ftc.utils import safeupdate
+from fym.utils.rot import angle2quat
 
 np.seterr(all="raise")
 
 
 class MyEnv(fym.BaseEnv):
+    ang = np.deg2rad((1, 1, 1))
     ENV_CONFIG = {
         "fkw": {
             "dt": 0.01,
@@ -21,7 +23,7 @@ class MyEnv(fym.BaseEnv):
             "init": {
                 "pos": np.vstack((0.5, 0.5, 0.0)),
                 "vel": np.zeros((3, 1)),
-                "quat": np.vstack((1, 0, 0, 0)),
+                "quat": angle2quat(ang[2], ang[1], ang[0]),
                 "omega": np.zeros((3, 1)),
             },
         },
@@ -31,9 +33,7 @@ class MyEnv(fym.BaseEnv):
         env_config = safeupdate(self.ENV_CONFIG, env_config)
         super().__init__(**env_config["fkw"])
         self.plant = Multicopter(env_config["plant"])
-        self.Q = np.diag([1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0])
-        self.R = np.diag([1, 1, 1, 1])
-        self.controller = ftc.make("LQR", self)
+        self.controller = ftc.make("PID", self)
 
     def step(self):
         env_info, done = self.update()
@@ -48,23 +48,22 @@ class MyEnv(fym.BaseEnv):
         refs = {"posd": posd, "posd_dot": posd_dot}
         return [refs[key] for key in args]
 
-    def set_dot(self, t):
-        forces, controller_info = self.controller.get_control(t, self)
-        rotors0 = self.plant.mixer(forces)
-        rotors = rotors0
-        self.plant.set_dot(t, rotors)
-
+    def set_dot(self, t):        
+        ctrl, controller_info = self.controller.get_control(t,self)
+        self.plant.set_dot(t, ctrl)
         env_info = {
             "t": t,
             **self.observe_dict(),
             **controller_info,
-            "forces": forces,
-            "rotors0": rotors0,
-            "rotors": rotors,
+            "ctrl": ctrl,
+            # "forces": forces,
+            # "rotors0": rotors0,
+            # "rotors": rotors,
         }
 
         return env_info
-    
+
+
 def run():
     env = MyEnv()
     flogger = fym.Logger("data.h5")
@@ -166,34 +165,34 @@ def plot():
     fig.subplots_adjust(wspace=0.3)
     fig.align_ylabels(axes)
 
-    """ Figure 2 - Generalized forces """
-    fig, axs = plt.subplots(4, 1)
-    for i, _ylabel in enumerate(["F", "Mx", "My", "Mz"]):
-        ax = axs[i]
-        ax.plot(data["t"], data["forces"].squeeze(-1)[:, i], "k-", label="Response")
-        # ax.plot(data["t"], data["forces0"].squeeze(-1)[:, i], "r--", label="Command")
-        ax.grid()
-        plt.setp(ax, ylabel=_ylabel)
-        if i == 0:
-            ax.legend(loc="upper right")
-    plt.gcf().supxlabel("Time, sec")
-    plt.gcf().supylabel("Generalized Forces")
+    # """ Figure 2 - Generalized forces """
+    # fig, axs = plt.subplots(4, 1)
+    # for i, _ylabel in enumerate(["F", "Mx", "My", "Mz"]):
+    #     ax = axs[i]
+    #     ax.plot(data["t"], data["forces"].squeeze(-1)[:, i], "k-", label="Response")
+    #     # ax.plot(data["t"], data["forces0"].squeeze(-1)[:, i], "r--", label="Command")
+    #     ax.grid()
+    #     plt.setp(ax, ylabel=_ylabel)
+    #     if i == 0:
+    #         ax.legend(loc="upper right")
+    # plt.gcf().supxlabel("Time, sec")
+    # plt.gcf().supylabel("Generalized Forces")
 
-    fig.tight_layout()
-    fig.subplots_adjust(wspace=0.5)
-    fig.align_ylabels(axs)
+    # fig.tight_layout()
+    # fig.subplots_adjust(wspace=0.5)
+    # fig.align_ylabels(axs)
 
     """ Figure 3 - Rotor forces """
-    fig, axs = plt.subplots(3, 2)
+    fig, axes = plt.subplots(3, 2)
     ylabels = np.array((["R1", "R2"], ["R3", "R4"], ["R5", "R6"]))
     for i, _ylabel in np.ndenumerate(ylabels):
-        ax = axs[i]
+        ax = axes[i]
         ax.plot(
-            data["t"], data["rotors"].squeeze(-1)[:, sum(i)], "k-", label="Response"
+            data["t"], data["ctrl"].squeeze(-1)[:, sum(i)], "k-", label="Response"
         )
-        ax.plot(
-            data["t"], data["rotors0"].squeeze(-1)[:, sum(i)], "r--", label="Command"
-        )
+        # ax.plot(
+        #     data["t"], data["rotors0"].squeeze(-1)[:, sum(i)], "r--", label="Command"
+        # )
         ax.grid()
         plt.setp(ax, ylabel=_ylabel)
         if i == (0, 1):
@@ -203,7 +202,7 @@ def plot():
 
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.5)
-    fig.align_ylabels(axs)
+    fig.align_ylabels(axes)
 
     plt.show()
 
