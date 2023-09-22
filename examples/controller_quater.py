@@ -17,15 +17,15 @@ class MyEnv(fym.BaseEnv):
     ENV_CONFIG = {
         "fkw": {
             "dt": 0.01,
-            "max_t": 10,
+            "max_t": 20,
         },
         "plant": {
             "init": {
-                "pos": np.vstack((1.0, 2.0, 0.0)),
-                "vel": np.zeros((3, 1)),
+                "pos": np.vstack((1, 2, 2)),
+                "vel": np.vstack((0, 0, 0)),
                 "quat": angle2quat(ang[2], ang[1], ang[0]),
                 # "quat": np.vstack((1, 0, 0, 0)),
-                "omega": np.zeros((3, 1)),
+                "omega": np.vstack((0, 0, 0)),
             },
         },
     }
@@ -33,7 +33,7 @@ class MyEnv(fym.BaseEnv):
     def __init__(self, env_config={}):
         env_config = safeupdate(self.ENV_CONFIG, env_config)
         super().__init__(**env_config["fkw"])
-        self.plant = Multicopter(env_config["plant"])
+        self.plant = Multicopter(env_config["plant"], rtype = "quad")
         self.controller = ftc.make("Quater", self)
 
     def step(self):
@@ -50,15 +50,7 @@ class MyEnv(fym.BaseEnv):
         return [refs[key] for key in args]
 
     def set_dot(self, t):
-        # forces, controller_info = self.controller.get_control(t, self)
-        # rotors0 = self.plant.mixer(forces)
-        # rotors = rotors0
-        # self.plant.set_dot(t, rotors)
-
-        # ctrl, controller_info = self.controller.get_control(t,self)
-        # forces = np.vstack((self.plant.m * self.plant.g, ctrl))
-        # rotors = np.linalg.pinv(self.plant.mixer.B) @ forces
-        
+                
         ctrl, controller_info = self.controller.get_control(t,self)
         
         self.plant.set_dot(t, ctrl)
@@ -96,7 +88,6 @@ def run():
 
 def plot():
     data = fym.load("data.h5")["env"]
-    print(data["posd"])
 
     """ Figure 1 - States """
     fig, axes = plt.subplots(3, 4, figsize=(18, 5), squeeze=False, sharex=True)
@@ -137,21 +128,21 @@ def plot():
 
     ax.set_xlabel("Time, sec")
 
-    """ Column 3 - States: Euler angles """
+    """ Column 3 - States: Quternion angles """
     ax = axes[0, 2]
-    ax.plot(data["t"], np.rad2deg(data["ang"][:, 0].squeeze(-1)), "k-")
-    ax.plot(data["t"], np.rad2deg(data["angd"][:, 0].squeeze(-1)), "r--")
+    ax.plot(data["t"], np.rad2deg(data["q_ypr"][:, 0].squeeze(-1)), "k-")
+    ax.plot(data["t"], np.rad2deg(data["qd_ypr"][:, 0].squeeze(-1)), "r--")
     ax.set_ylabel(r"$\phi$, deg")
     # ax.legend(["Response", "Ref"], loc="upper right")
 
     ax = axes[1, 2]
-    ax.plot(data["t"], np.rad2deg(data["ang"][:, 1].squeeze(-1)), "k-")
-    ax.plot(data["t"], np.rad2deg(data["angd"][:, 1].squeeze(-1)), "r--")
+    ax.plot(data["t"], np.rad2deg(data["q_ypr"][:, 1].squeeze(-1)), "k-")
+    ax.plot(data["t"], np.rad2deg(data["qd_ypr"][:, 1].squeeze(-1)), "r--")
     ax.set_ylabel(r"$\theta$, deg")
 
     ax = axes[2, 2]
-    ax.plot(data["t"], np.rad2deg(data["ang"][:, 2].squeeze(-1)), "k-")
-    ax.plot(data["t"], np.rad2deg(data["angd"][:, 2].squeeze(-1)), "r--")
+    ax.plot(data["t"], np.rad2deg(data["q_ypr"][:, 2].squeeze(-1)), "k-")
+    ax.plot(data["t"], np.rad2deg(data["qd_ypr"][:, 2].squeeze(-1)), "r--")
     ax.set_ylabel(r"$\psi$, deg")
 
     ax.set_xlabel("Time, sec")
@@ -234,11 +225,42 @@ def plot():
     # ax.set_xlabel("Time, sec")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Rotor Thrusts")
-
+    
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.5)
     fig.align_ylabels(axes)
 
+
+    """ Figure 4 - Quadcopter attitude """
+    plt.figure()
+    plt.plot(data["t"], data["q"][:, 0], "k-", label = 'q0')
+    plt.plot(data["t"], data["q"][:, 1], "r-", label = 'q1')
+    plt.plot(data["t"], data["q"][:, 2], "g-", label = 'q2')
+    plt.plot(data["t"], data["q"][:, 3], "b-", label = 'q3')
+    
+    ax.legend(loc="upper right")
+    
+    plt.gcf().supxlabel("Time, sec")
+    plt.gcf().supylabel("Quaternion")
+    
+    fig.tight_layout()
+    fig.subplots_adjust(wspace=0.5)
+    fig.align_ylabels(axes)
+    
+    """ Figure 5 - LPF Filter """
+    plt.figure()
+    plt.plot(data["t"], data["theta"][:, 0], "k-", label = 'theta')
+    plt.plot(data["t"], data["theta_f"][:, 0], "r-", label = 'theta_filtered')
+    
+    ax.legend(loc="upper right")
+    plt.legend()
+    
+    plt.gcf().supxlabel("Time, sec")
+    plt.gcf().supylabel(r"$\theta$, deg")
+    
+    fig.tight_layout()
+    fig.subplots_adjust(wspace=0.5)
+    fig.align_ylabels(axes)
 
     plt.show()
 
