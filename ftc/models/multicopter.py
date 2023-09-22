@@ -156,7 +156,7 @@ class Multicopter(fym.BaseEnv):
         },
     }
 
-    def __init__(self, env_config={}, dx=0.0, dy=0.0, dz=0.0, rtype="quad"):
+    def __init__(self, env_config={}, dx=0.0, dy=0.0, dz=0.0, rtype="hexa-x"):
         env_config = safeupdate(self.ENV_CONFIG, env_config)
         super().__init__()
         self.pos = fym.BaseSystem(env_config["init"]["pos"])
