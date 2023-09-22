@@ -32,7 +32,7 @@ class MyEnv(fym.BaseEnv):
     def __init__(self, env_config={}):
         env_config = safeupdate(self.ENV_CONFIG, env_config)
         super().__init__(**env_config["fkw"])
-        self.plant = Multicopter(env_config["plant"])
+        self.plant = Multicopter(env_config["plant"], rtype="quad")
         self.controller = ftc.make("PID", self)
 
     def step(self):
