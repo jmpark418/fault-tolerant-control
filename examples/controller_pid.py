@@ -21,7 +21,7 @@ class MyEnv(fym.BaseEnv):
         },
         "plant": {
             "init": {
-                "pos": np.vstack((0.5, 0.5, 0.0)),
+                "pos": np.vstack((1, 1, 1)),
                 "vel": np.zeros((3, 1)),
                 "quat": angle2quat(ang[2], ang[1], ang[0]),
                 "omega": np.zeros((3, 1)),
@@ -165,41 +165,29 @@ def plot():
     fig.subplots_adjust(wspace=0.3)
     fig.align_ylabels(axes)
 
-    # """ Figure 2 - Generalized forces """
-    # fig, axs = plt.subplots(4, 1)
-    # for i, _ylabel in enumerate(["F", "Mx", "My", "Mz"]):
-    #     ax = axs[i]
-    #     ax.plot(data["t"], data["forces"].squeeze(-1)[:, i], "k-", label="Response")
-    #     # ax.plot(data["t"], data["forces0"].squeeze(-1)[:, i], "r--", label="Command")
-    #     ax.grid()
-    #     plt.setp(ax, ylabel=_ylabel)
-    #     if i == 0:
-    #         ax.legend(loc="upper right")
-    # plt.gcf().supxlabel("Time, sec")
-    # plt.gcf().supylabel("Generalized Forces")
+    """ Figure 2 - Rotor forces """
+    fig, axes = plt.subplots(2, 2)
+    
+    ax = axes[0, 0]
+    ax.plot(data["t"], data["ctrl"][:, 0], "k-")
+    ax.set_ylabel("R1")
 
-    # fig.tight_layout()
-    # fig.subplots_adjust(wspace=0.5)
-    # fig.align_ylabels(axs)
+    ax = axes[0, 1]
+    ax.plot(data["t"], data["ctrl"][:, 1], "k-")
+    ax.set_ylabel("R2")
 
-    """ Figure 3 - Rotor forces """
-    fig, axes = plt.subplots(3, 2)
-    ylabels = np.array((["R1", "R2"], ["R3", "R4"], ["R5", "R6"]))
-    for i, _ylabel in np.ndenumerate(ylabels):
-        ax = axes[i]
-        ax.plot(
-            data["t"], data["ctrl"].squeeze(-1)[:, sum(i)], "k-", label="Response"
-        )
-        # ax.plot(
-        #     data["t"], data["rotors0"].squeeze(-1)[:, sum(i)], "r--", label="Command"
-        # )
-        ax.grid()
-        plt.setp(ax, ylabel=_ylabel)
-        if i == (0, 1):
-            ax.legend(loc="upper right")
+    ax = axes[1, 0]
+    ax.plot(data["t"], data["ctrl"][:, 2], "k-")
+    ax.set_ylabel("R3")
+    
+    ax = axes[1, 1]
+    ax.plot(data["t"], data["ctrl"][:, 3], "k-")
+    ax.set_ylabel("R4")
+
+    # ax.set_xlabel("Time, sec")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Rotor Thrusts")
-
+    
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.5)
     fig.align_ylabels(axes)
