@@ -3,11 +3,11 @@ import argparse
 import fym
 import matplotlib.pyplot as plt
 import numpy as np
+from fym.utils.rot import angle2quat
 
 import ftc
 from ftc.models.multicopter import Multicopter
 from ftc.utils import safeupdate
-from fym.utils.rot import angle2quat
 
 np.seterr(all="raise")
 
@@ -48,8 +48,8 @@ class MyEnv(fym.BaseEnv):
         refs = {"posd": posd, "posd_dot": posd_dot}
         return [refs[key] for key in args]
 
-    def set_dot(self, t):        
-        ctrl, controller_info = self.controller.get_control(t,self)
+    def set_dot(self, t):
+        ctrl, controller_info = self.controller.get_control(t, self)
         self.plant.set_dot(t, ctrl)
         env_info = {
             "t": t,
@@ -167,7 +167,7 @@ def plot():
 
     """ Figure 2 - Rotor forces """
     fig, axes = plt.subplots(2, 2)
-    
+
     ax = axes[0, 0]
     ax.plot(data["t"], data["ctrl"][:, 0], "k-")
     ax.set_ylabel("R1")
@@ -179,7 +179,7 @@ def plot():
     ax = axes[1, 0]
     ax.plot(data["t"], data["ctrl"][:, 2], "k-")
     ax.set_ylabel("R3")
-    
+
     ax = axes[1, 1]
     ax.plot(data["t"], data["ctrl"][:, 3], "k-")
     ax.set_ylabel("R4")
@@ -187,7 +187,7 @@ def plot():
     # ax.set_xlabel("Time, sec")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Rotor Thrusts")
-    
+
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.5)
     fig.align_ylabels(axes)

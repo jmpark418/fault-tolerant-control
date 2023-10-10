@@ -3,17 +3,18 @@ import argparse
 import fym
 import matplotlib.pyplot as plt
 import numpy as np
+from fym.utils.rot import angle2quat
 
 import ftc
 from ftc.models.multicopter import Multicopter
 from ftc.utils import safeupdate
-from fym.utils.rot import angle2quat
 
 np.seterr(all="raise")
 
+
 class MyEnv(fym.BaseEnv):
     ang = np.deg2rad((0, 0, 0))
-    
+
     ENV_CONFIG = {
         "fkw": {
             "dt": 0.01,
@@ -33,7 +34,7 @@ class MyEnv(fym.BaseEnv):
     def __init__(self, env_config={}):
         env_config = safeupdate(self.ENV_CONFIG, env_config)
         super().__init__(**env_config["fkw"])
-        self.plant = Multicopter(env_config["plant"], rtype = "quad")
+        self.plant = Multicopter(env_config["plant"], rtype="quad")
         self.controller = ftc.make("Quater", self)
 
     def step(self):
@@ -50,9 +51,8 @@ class MyEnv(fym.BaseEnv):
         return [refs[key] for key in args]
 
     def set_dot(self, t):
-                
-        ctrl, controller_info = self.controller.get_control(t,self)
-        
+        ctrl, controller_info = self.controller.get_control(t, self)
+
         self.plant.set_dot(t, ctrl)
         env_info = {
             "t": t,
@@ -85,6 +85,7 @@ def run():
     finally:
         flogger.close()
         plot()
+
 
 def plot():
     data = fym.load("data.h5")["env"]
@@ -167,45 +168,9 @@ def plot():
     fig.subplots_adjust(wspace=0.3)
     fig.align_ylabels(axes)
 
-    # """ Figure 2 - Generalized forces """
-    # fig, axs = plt.subplots(4, 1)
-    # for i, _ylabel in enumerate(["F", "Mx", "My", "Mz"]):
-    #     ax = axs[i]
-    #     ax.plot(data["t"], data["forces"].squeeze(-1)[:, i], "k-", label="Response")
-    #     # ax.plot(data["t"], data["forces0"].squeeze(-1)[:, i], "r--", label="Command")
-    #     ax.grid()
-    #     plt.setp(ax, ylabel=_ylabel)
-    #     if i == 0:
-    #         ax.legend(loc="upper right")
-    # plt.gcf().supxlabel("Time, sec")
-    # plt.gcf().supylabel("Generalized Forces")
-
-    # fig.tight_layout()
-    # fig.subplots_adjust(wspace=0.5)
-    # fig.align_ylabels(axs)
-
-    """ Figure 3 - Rotor forces """
+    """ Figure 2 - Rotor forces """
     fig, axes = plt.subplots(2, 2)
-    # ylabels = np.array((["R1", "R2"], ["R3", "R4"], ["R5", "R6"]))
-    # for i, _ylabel in np.ndenumerate(ylabels):
-    #     ax = axes[i]
-    #     ax.plot(
-    #         data["t"], data["ctrl"].squeeze(-1)[:, sum(i)], "k-", label="Response"
-    #     )
-    #     # ax.plot(
-    #     #     data["t"], data["rotors0"].squeeze(-1)[:, sum(i)], "r--", label="Command"
-    #     # )
-    #     ax.grid()
-    #     plt.setp(ax, ylabel=_ylabel)
-    #     if i == (0, 1):
-    #         ax.legend(loc="upper right")
-    # plt.gcf().supxlabel("Time, sec")
-    # plt.gcf().supylabel("Rotor Thrusts")
 
-    # fig.tight_layout()
-    # fig.subplots_adjust(wspace=0.5)
-    # fig.align_ylabels(axes)
-    
     ax = axes[0, 0]
     ax.plot(data["t"], data["ctrl"][:, 0], "k-")
     ax.set_ylabel("R1")
@@ -217,7 +182,7 @@ def plot():
     ax = axes[1, 0]
     ax.plot(data["t"], data["ctrl"][:, 2], "k-")
     ax.set_ylabel("R3")
-    
+
     ax = axes[1, 1]
     ax.plot(data["t"], data["ctrl"][:, 3], "k-")
     ax.set_ylabel("R4")
@@ -225,44 +190,44 @@ def plot():
     # ax.set_xlabel("Time, sec")
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Rotor Thrusts")
-    
+
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.5)
     fig.align_ylabels(axes)
 
-
-    """ Figure 4 - Quadcopter attitude """
+    """ Figure 3 - Quadcopter attitude """
     plt.figure()
-    plt.plot(data["t"], data["q"][:, 0], "k-", label = 'q0')
-    plt.plot(data["t"], data["q"][:, 1], "r-", label = 'q1')
-    plt.plot(data["t"], data["q"][:, 2], "g-", label = 'q2')
-    plt.plot(data["t"], data["q"][:, 3], "b-", label = 'q3')
-    
+    plt.plot(data["t"], data["q"][:, 0], "k-", label="q0")
+    plt.plot(data["t"], data["q"][:, 1], "r-", label="q1")
+    plt.plot(data["t"], data["q"][:, 2], "g-", label="q2")
+    plt.plot(data["t"], data["q"][:, 3], "b-", label="q3")
+
     ax.legend(loc="upper right")
-    
+
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel("Quaternion")
-    
+
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.5)
     fig.align_ylabels(axes)
-    
-    """ Figure 5 - LPF Filter """
+
+    """ Figure 4 - LPF Filter """
     plt.figure()
-    plt.plot(data["t"], data["theta"][:, 0], "k-", label = 'theta')
-    plt.plot(data["t"], data["theta_f"][:, 0], "r-", label = 'theta_filtered')
-    
+    plt.plot(data["t"], data["theta"][:, 0], "k-", label="theta")
+    plt.plot(data["t"], data["theta_f"][:, 0], "r-", label="theta_filtered")
+
     ax.legend(loc="upper right")
     plt.legend()
-    
+
     plt.gcf().supxlabel("Time, sec")
     plt.gcf().supylabel(r"$\theta$, deg")
-    
+
     fig.tight_layout()
     fig.subplots_adjust(wspace=0.5)
     fig.align_ylabels(axes)
 
     plt.show()
+
 
 def main(args):
     if args.only_plot:
