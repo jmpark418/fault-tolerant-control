@@ -1,3 +1,6 @@
+"""References
+[1] J. Li and Y. Li, "Dynamic analysis and PID control for a quadrotor," 2011 IEEE International Conference on Mechatronics and Automation, Beijing, China, 2011, pp. 573-578, doi: 10.1109/ICMA.2011.5985724.
+"""
 import fym
 import numpy as np
 from fym.utils.rot import quat2angle
@@ -59,8 +62,8 @@ class PIDController(fym.BaseEnv):
 
         ctrls = np.linalg.pinv(env.plant.mixer.B) @ forces
 
-        self.pos_int.dot = pos
-        self.ang_int.dot = ang
+        self.pos_int.dot = pos_e
+        self.ang_int.dot = ang_e
 
         controller_info = {
             "angd": angd,
