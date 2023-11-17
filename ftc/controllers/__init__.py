@@ -44,3 +44,7 @@ register(
     id="Quater",
     entry_point="ftc.controllers.Quater.quater:QuaterController",
 )
+register(
+    id="NDI-JM",
+    entry_point="ftc.controllers.NDI.ndi_jm:NDIController",
+)
