@@ -16,6 +16,7 @@ class NDIController(fym.BaseEnv):
         ang = np.vstack(quat2angle(quat)[::-1])
 
         posd, posd_dot = env.get_ref(t, "posd", "posd_dot")
+        angd_dot = np.zeros((3,1))
         
         """
             x, y position control
@@ -27,14 +28,30 @@ class NDIController(fym.BaseEnv):
         Kvel = np.diag((1,1))
         
         nuo = (-Kpos @ pos_e[0:2] - Kvel @ vel_e[0:2]) / env.plant.g
-        angd = np.vstack((nuo[1], -nuo[0], 0))
+        angd = np.zeros((3,1))
         
         """
             y1 (z, phi, theta, psi) control
         """
+        ang_e = ang - angd
+        ang_dot_e = ang_dot - angd_dot
+        
+        K1 = np.diag((1, 1, 1, 1))
+        K2 = np.diag((1, 1, 1, 1))
+        
+        nu_h = np.vstack((-K1[0,0]*vel_e[2] - K2[0,0]*pos_e[2],
+                          K1[1:4,1:] @ ang_e - K2[1:4,1:] @ ang_dot_e))
+        
+        E_h = np.diag([float(-np.cos(ang[1])*np.cos(ang[0])/env.plant.m), 1/env.plant.J[0,0], 1/env.plant.J[1,1], 1/env.plant.J[2,2]])
                         
         M_h = np.vstack((-env.plant.g, 
-                         ang_dot[1]*ang_dot[2]))
+                         ang_dot[1]*ang_dot[2]*((env.plant.J[1,1]-env.plant.J[2,2])/env.plant.J[0,0]),
+                         ang_dot[0]*ang_dot[2]*((env.plant.J[2,2]-env.plant.J[0,0])/env.plant.J[1,1]),
+                         ang_dot[0]*ang_dot[1]*((env.plant.J[0,0]-env.plant.J[1,1])/env.plant.J[2,2])))
+        
+        forces = np.linalg.inv(E_h) @ (-M_h + nu_h)
+        
+        ctrls = np.linalg.pinv(env.plant.mixer.B) @ forces
 
         controller_info = {
             "angd": angd,

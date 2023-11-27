@@ -108,7 +108,7 @@ class QuaterController(fym.BaseEnv):
 
         F_th = np.linalg.norm(up) * env.plant.m
         forces = np.vstack((F_th, uatt))
-
+        
         ctrl = np.linalg.pinv(env.plant.mixer.B) @ forces
 
         q_ypr = np.vstack((quat2angle(quat)[::-1]))
