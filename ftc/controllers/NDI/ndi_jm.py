@@ -24,11 +24,13 @@ class NDIController(fym.BaseEnv):
         pos_e = pos - posd
         vel_e = vel - posd_dot
         
-        Kpos = np.diag((1,1))
-        Kvel = np.diag((1,1))
+        Kpos = 0.01*np.diag((10,10))
+        Kvel = 0.01*np.diag((10,10))
         
-        nuo = (-Kpos @ pos_e[0:2] - Kvel @ vel_e[0:2]) / env.plant.g
-        angd = np.zeros((3,1))
+        accd = (-Kpos @ pos_e[0:2] - Kvel @ vel_e[0:2]) / env.plant.g
+        accd_mag = np.linalg.norm(accd)
+        
+        angd = np.vstack((accd[1]/accd_mag, -accd[0]/accd_mag, 0))
         
         """
             y1 (z, phi, theta, psi) control
@@ -36,13 +38,13 @@ class NDIController(fym.BaseEnv):
         ang_e = ang - angd
         ang_dot_e = ang_dot - angd_dot
         
-        K1 = np.diag((1, 1, 1, 1))
-        K2 = np.diag((1, 1, 1, 1))
+        K1 = np.diag((10, 5, 5, 5))
+        K2 = np.diag((10, 1, 1, 1))
         
         nu_h = np.vstack((-K1[0,0]*vel_e[2] - K2[0,0]*pos_e[2],
-                          K1[1:4,1:] @ ang_e - K2[1:4,1:] @ ang_dot_e))
+                          -K1[1:4,1:] @ ang_e - K2[1:4,1:] @ ang_dot_e))
         
-        E_h = np.diag([float(-np.cos(ang[1])*np.cos(ang[0])/env.plant.m), 1/env.plant.J[0,0], 1/env.plant.J[1,1], 1/env.plant.J[2,2]])
+        E_h = np.diag([float(-np.cos(ang[1])*np.cos(ang[0])/env.plant.m), env.plant.d/env.plant.J[0,0], env.plant.d/env.plant.J[1,1], env.plant.d/env.plant.J[2,2]])
                         
         M_h = np.vstack((-env.plant.g, 
                          ang_dot[1]*ang_dot[2]*((env.plant.J[1,1]-env.plant.J[2,2])/env.plant.J[0,0]),
@@ -50,8 +52,7 @@ class NDIController(fym.BaseEnv):
                          ang_dot[0]*ang_dot[1]*((env.plant.J[0,0]-env.plant.J[1,1])/env.plant.J[2,2])))
         
         forces = np.linalg.inv(E_h) @ (-M_h + nu_h)
-        
-        ctrls = np.linalg.pinv(env.plant.mixer.B) @ forces
+        ctrls = np.linalg.inv(env.plant.mixer.B) @ forces
 
         controller_info = {
             "angd": angd,
