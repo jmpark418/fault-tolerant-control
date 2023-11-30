@@ -27,7 +27,6 @@ class NDIController(fym.BaseEnv):
         Kvel = np.diag((1, 1))
 
         accd = (-Kpos @ pos_e[0:2] - Kvel @ vel_e[0:2]) / env.plant.g
-        accd_mag = np.linalg.norm(accd)
 
         angd = np.vstack((accd[1], -accd[0], 0))
 
