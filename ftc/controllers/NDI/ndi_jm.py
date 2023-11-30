@@ -24,13 +24,13 @@ class NDIController(fym.BaseEnv):
         pos_e = pos - posd
         vel_e = vel - posd_dot
         
-        Kpos = 0.01*np.diag((10,10))
-        Kvel = 0.01*np.diag((10,10))
+        Kpos = np.diag((1,1))
+        Kvel = np.diag((1,1))
         
         accd = (-Kpos @ pos_e[0:2] - Kvel @ vel_e[0:2]) / env.plant.g
         accd_mag = np.linalg.norm(accd)
         
-        angd = np.vstack((accd[1]/accd_mag, -accd[0]/accd_mag, 0))
+        angd = np.vstack((accd[1], -accd[0], 0))
         
         """
             y1 (z, phi, theta, psi) control
@@ -46,7 +46,7 @@ class NDIController(fym.BaseEnv):
         
         E_h = np.diag([float(-np.cos(ang[1])*np.cos(ang[0])/env.plant.m), env.plant.d/env.plant.J[0,0], env.plant.d/env.plant.J[1,1], env.plant.d/env.plant.J[2,2]])
                         
-        M_h = np.vstack((-env.plant.g, 
+        M_h = np.vstack((env.plant.g, 
                          ang_dot[1]*ang_dot[2]*((env.plant.J[1,1]-env.plant.J[2,2])/env.plant.J[0,0]),
                          ang_dot[0]*ang_dot[2]*((env.plant.J[2,2]-env.plant.J[0,0])/env.plant.J[1,1]),
                          ang_dot[0]*ang_dot[1]*((env.plant.J[0,0]-env.plant.J[1,1])/env.plant.J[2,2])))
