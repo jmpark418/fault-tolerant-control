@@ -22,7 +22,7 @@ class MyEnv(fym.BaseEnv):
         },
         "plant": {
             "init": {
-                "pos": np.vstack((1, 2, 2)),
+                "pos": np.vstack((5, 5, 10)),
                 "vel": np.vstack((0, 0, 0)),
                 "quat": angle2quat(ang[2], ang[1], ang[0]),
                 # "quat": np.vstack((1, 0, 0, 0)),

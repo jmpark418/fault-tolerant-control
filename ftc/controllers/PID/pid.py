@@ -21,13 +21,13 @@ class PIDController(fym.BaseEnv):
         angd = np.deg2rad(np.vstack((0, 0, 0)))
         omegad = np.zeros((3, 1))
 
-        Kp_pos = np.diag([1.3, 1.3, 2])
-        Kd_pos = np.diag([2.2, 2.2, 1])
-        Ki_pos = np.diag([0.01, 0.01, 1])
+        Kp_pos = np.diag([8, 8, 20])
+        Kd_pos = np.diag([10, 10, 10])
+        Ki_pos = np.diag([0.1, 0.1, 1])
 
-        Kp_att = np.diag([8, 8, 5])
-        Kd_att = np.diag([5, 5, 1])
-        Ki_att = np.diag([0.1, 0.1, 0.01])
+        Kp_att = np.diag([20, 17, 80])
+        Kd_att = np.diag([5, 5, 5])
+        Ki_att = np.diag([0.1, 0.1, 1])
 
         pos_int = self.pos_int.state
         ang_int = self.ang_int.state

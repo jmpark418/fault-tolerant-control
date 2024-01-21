@@ -13,7 +13,7 @@ np.seterr(all="raise")
 
 
 class MyEnv(fym.BaseEnv):
-    ang = np.deg2rad((1, 1, 1))
+    ang = np.deg2rad((0, 0, 0))
     ENV_CONFIG = {
         "fkw": {
             "dt": 0.01,
@@ -21,7 +21,7 @@ class MyEnv(fym.BaseEnv):
         },
         "plant": {
             "init": {
-                "pos": np.vstack((1, 1, 1)),
+                "pos": np.vstack((5, 5, 10)),
                 "vel": np.zeros((3, 1)),
                 "quat": angle2quat(ang[2], ang[1], ang[0]),
                 "omega": np.zeros((3, 1)),
