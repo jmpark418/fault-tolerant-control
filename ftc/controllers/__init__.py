@@ -48,3 +48,7 @@ register(
     id="NDI-JM",
     entry_point="ftc.controllers.NDI.ndi_jm:NDIController",
 )
+register(
+    id="Reduced-Attitude",
+    entry_point="ftc.controllers.Reduced-Attitude.reduced-attitude:ReducedAttitudeController",
+)
