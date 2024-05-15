@@ -21,7 +21,7 @@ class MyEnv(fym.BaseEnv):
         },
         "plant": {
             "init": {
-                "pos": np.vstack((1, 1, 1)),
+                "pos": np.vstack((5, 5, 10)),
                 "vel": np.zeros((3, 1)),
                 "quat": angle2quat(ang[2], ang[1], ang[0]),
                 "omega": np.vstack((0.05, 0.05, 0.05)),
@@ -50,14 +50,16 @@ class MyEnv(fym.BaseEnv):
 
     def set_dot(self, t):
         ctrl, controller_info = self.controller.get_control(t, self)
-        ctrl2 = self.set_Lambda(t, ctrl)
+        ctrl2 = self.set_Lambda(
+            t, ctrl
+        )  ###################################################
         self.plant.set_dot(t, ctrl2)
-        
+
         env_info = {
             "t": t,
             **self.observe_dict(),
             **controller_info,
-            "ctrl": ctrl,
+            "ctrl": ctrl2,
             # "forces": forces,
             # "rotors0": rotors0,
             # "rotors": rotors,
@@ -76,6 +78,7 @@ class MyEnv(fym.BaseEnv):
         Lambda = self.get_Lambda(t)
         ctrls = np.diag(Lambda) @ ctrls
         return ctrls
+
 
 def run():
     env = MyEnv()
@@ -101,62 +104,62 @@ def plot():
     data = fym.load("data.h5")["env"]
 
     """ Figure 1 - States """
-    fig, axes = plt.subplots(4, 1, figsize=(9, 5), squeeze=False, sharex=True)
+    fig, axes = plt.subplots(4, 3, figsize=(18, 5), squeeze=False, sharex=True)
 
-    # """ Column 1 - States: Position """
-    # ax = axes[0, 0]
-    # ax.plot(data["t"], data["plant"]["pos"][:, 0].squeeze(-1), "k-")
-    # ax.plot(data["t"], data["posd"][:, 0].squeeze(-1), "r--")
-    # ax.set_ylabel(r"$x$, m")
-    # # ax.legend(["Response", "Ref"], loc="upper right")
-    # ax.set_xlim(data["t"][0], data["t"][-1])
+    """ Column 1 - States: Position """
+    ax = axes[0, 0]
+    ax.plot(data["t"], data["plant"]["pos"][:, 0].squeeze(-1), "k-")
+    ax.plot(data["t"], data["posd"][:, 0].squeeze(-1), "r--")
+    ax.set_ylabel(r"$x$, m")
+    # ax.legend(["Response", "Ref"], loc="upper right")
+    ax.set_xlim(data["t"][0], data["t"][-1])
 
-    # ax = axes[1, 0]
-    # ax.plot(data["t"], data["plant"]["pos"][:, 1].squeeze(-1), "k-")
-    # ax.plot(data["t"], data["posd"][:, 1].squeeze(-1), "r--")
-    # ax.set_ylabel(r"$y$, m")
+    ax = axes[1, 0]
+    ax.plot(data["t"], data["plant"]["pos"][:, 1].squeeze(-1), "k-")
+    ax.plot(data["t"], data["posd"][:, 1].squeeze(-1), "r--")
+    ax.set_ylabel(r"$y$, m")
 
-    # ax = axes[2, 0]
-    # ax.plot(data["t"], data["plant"]["pos"][:, 2].squeeze(-1), "k-")
-    # ax.plot(data["t"], data["posd"][:, 2].squeeze(-1), "r--")
-    # ax.set_ylabel(r"$z$, m")
+    ax = axes[2, 0]
+    ax.plot(data["t"], data["plant"]["pos"][:, 2].squeeze(-1), "k-")
+    ax.plot(data["t"], data["posd"][:, 2].squeeze(-1), "r--")
+    ax.set_ylabel(r"$z$, m")
 
-    # ax.set_xlabel("Time, sec")
+    ax.set_xlabel("Time, sec")
 
-    # """ Column 2 - States: Velocity """
-    # ax = axes[0, 1]
-    # ax.plot(data["t"], data["plant"]["vel"][:, 0].squeeze(-1), "k-")
-    # ax.set_ylabel(r"$v_x$, m/s")
-    # # ax.legend(["Response", "Ref"], loc="upper right")
+    """ Column 2 - States: Velocity """
+    ax = axes[0, 1]
+    ax.plot(data["t"], data["plant"]["vel"][:, 0].squeeze(-1), "k-")
+    ax.set_ylabel(r"$v_x$, m/s")
+    # ax.legend(["Response", "Ref"], loc="upper right")
 
-    # ax = axes[1, 1]
-    # ax.plot(data["t"], data["plant"]["vel"][:, 1].squeeze(-1), "k-")
-    # ax.set_ylabel(r"$v_y$, m/s")
+    ax = axes[1, 1]
+    ax.plot(data["t"], data["plant"]["vel"][:, 1].squeeze(-1), "k-")
+    ax.set_ylabel(r"$v_y$, m/s")
 
-    # ax = axes[2, 1]
-    # ax.plot(data["t"], data["plant"]["vel"][:, 2].squeeze(-1), "k-")
-    # ax.set_ylabel(r"$v_z$, m/s")
+    ax = axes[2, 1]
+    ax.plot(data["t"], data["plant"]["vel"][:, 2].squeeze(-1), "k-")
+    ax.set_ylabel(r"$v_z$, m/s")
 
-    # ax.set_xlabel("Time, sec")
+    ax.set_xlabel("Time, sec")
 
     """ Column 3 - States: Euler angles """
-    ax = axes[0, 0]
+    ax = axes[0, 2]
     ax.plot(data["t"], np.rad2deg(data["s_tilde"][:, 0].squeeze(-1)), "k-")
     ax.plot(data["t"], np.rad2deg(data["s_tilde_des"][:, 0].squeeze(-1)), "r--")
     ax.set_ylabel("p, deg/sec")
     # ax.legend(["Response", "Ref"], loc="upper right")
 
-    ax = axes[1, 0]
+    ax = axes[1, 2]
     ax.plot(data["t"], np.rad2deg(data["s_tilde"][:, 1].squeeze(-1)), "k-")
     ax.plot(data["t"], np.rad2deg(data["s_tilde_des"][:, 1].squeeze(-1)), "r--")
     ax.set_ylabel("q, deg/sec")
 
-    ax = axes[2, 0]
+    ax = axes[2, 2]
     ax.plot(data["t"], np.rad2deg(data["s_tilde"][:, 2].squeeze(-1)), "k-")
     ax.plot(data["t"], np.rad2deg(data["s_tilde_des"][:, 2].squeeze(-1)), "r--")
     ax.set_ylabel(r"$n_x$")
-    
-    ax = axes[3, 0]
+
+    ax = axes[3, 2]
     ax.plot(data["t"], np.rad2deg(data["s_tilde"][:, 3].squeeze(-1)), "k-")
     ax.plot(data["t"], np.rad2deg(data["s_tilde_des"][:, 3].squeeze(-1)), "r--")
     ax.set_ylabel(r"$n_y$")

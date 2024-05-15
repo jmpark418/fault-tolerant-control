@@ -43,7 +43,7 @@ class MyEnv(fym.BaseEnv):
         return self.observe_flat()
 
     def get_ref(self, t, *args):
-        posd = np.vstack((0, 0, 0))
+        posd = np.vstack((np.sin(t), np.sin(t), np.sin(t)))
         posd_dot = np.vstack((0, 0, 0))
         refs = {"posd": posd, "posd_dot": posd_dot}
         return [refs[key] for key in args]
